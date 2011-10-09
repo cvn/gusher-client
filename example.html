@@ -1,0 +1,144 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+	<meta charset="UTF-8">
+	<title>Gusher example</title>
+	<link rel="stylesheet" href="styles/standard.css" />
+	<link rel="stylesheet" href="styles/example.css" />
+	
+	<script type="text/javascript" src="js/jquery-1.6.2.min.js"></script>
+	<script type="text/javascript" src="js/ICanHaz.min.js"></script>
+	<script type="text/javascript" src="js/gusher.js"></script>
+	<script type="text/javascript" src="js/feeds.js"></script>
+
+	<script type="text/javascript">
+		$(document).ready(function(){ 		  
+		    // Render templates
+		    DeliciousBookmarks.render();
+		    DisqusComments.render();
+		    FlickrPhotos.render();
+		    GithubGists.render();
+		    GoogleCalendarUpcoming.render();
+		    GooglePlusActivity.render();
+		    GoogleReaderStarred.render();
+		    InstapaperStarred.render();
+		    LastfmFavs.render();
+		    StackOverflowAnswers.render();
+		    TumblrPosts.render();
+		    TwitterPosts.render(20);
+		    VimeoActivity.render();
+		    YouTubeFavorites.render();		    
+		});
+	</script>
+</head>
+<body>
+<div id="container">
+	<div id="content"></div>
+	<div id="sidebar">
+		<h3 class="headlinec">Upcoming Events</h3>
+		<div id="events"></div>
+		<h3 class="headlinec">Feeds</h3>
+		<ul id="services" class="cleanlist"></ul>
+	</div>
+</div>
+</body>
+</html>
+
+
+
+
+
+
+
+<!-- TEMPLATES -->
+<!-- These templates can also be in a separate file, see the bottom of 
+     feeds.js for an example of how it works -->
+	<script id="blogTemplate" type="text/html">
+	  <div class="article {{ type }}" timestamp="{{ timestamp }}">
+	    <h4 class="title">{{{ title }}}</h4>
+	    <div class="info">
+	      <ul class="shy extra cleanlist">
+	        <div class="triangle"></div>
+	        <li><a href="{{ post_url }}">{{ type }}</a></li>
+	        <li>Service: <img class="favicon" src="{{ icon }}" /> <a href="{{ service_url }}">{{ service }}</a></li>
+	        <li>Replies: {{ replies }}</li>
+	        <li>Likes: {{ likes }}</li>
+	      </ul>
+	    </div>
+	    {{{ body }}}
+	    {{{ comments }}}
+	  </div>
+	</script>
+
+	<script id="eventTemplate" type="text/html">
+	  <div class="article {{ type }}" timestamp="{{ timestamp }}">
+	    <h4 class="title"><a href="{{ post_url }}">{{{ title }}}</a></h4>
+	    <div class="info" style="background: url('{{ post_icon }}')">
+	      <ul class="shy extra cleanlist">
+	        <div class="triangle"></div>
+	        <li><a href="{{ post_url }}">{{ type }}</a></li>
+	        <li>Service: <img class="favicon" src="{{ icon }}" /> <a href="{{ service_url }}">{{ service }}</a></li>
+	        <li>{{{ body }}}</li>
+	        <li>{{{ comments }}}</li>
+	      </ul>
+	    </div>
+	  </div>
+	</script>
+	
+	<script id="quoteTemplate" type="text/html">
+	  <div class="article {{ type }}" timestamp="{{ timestamp }}">
+	    <h4 class="title"> <a href="{{ post_url }}">{{{ title }}}</a></h4>
+	    <div class="info">
+	      <ul class="shy extra cleanlist">
+	        <div class="triangle"></div>
+	        <li><a href="{{ post_url }}">{{ type }}</a></li>
+	        <li>Service: <img class="favicon" title="{{ service }}" src="{{ icon }}" /> {{ service }}</li>
+	        <li>Replies: {{ replies }}</li>
+	        <li>Likes: {{ likes }}</li>
+	      </ul>
+	    </div>
+	    <blockquote>{{{ body }}}</blockquote>
+	    {{{ comments }}}
+	  </div>
+	</script>
+	
+	<script id="photoTemplate" type="text/html">
+	  <div class="article {{ type }}" timestamp="{{ timestamp }}">
+	    <h4 class="title">{{ title }}</h4>
+	    <div class="info">
+	      <ul class="shy extra cleanlist">
+	        <div class="triangle"></div>
+	        <li><a href="{{ post_url }}">{{ type }}</a></li>
+	        <li>Service: <img class="favicon" title="{{ service }}" src="{{ icon }}" /> <a href="{{ user_url }}">{{ service }}</a></li>
+	        <li>Replies: {{ replies }}</li>
+	        <li>Likes: {{ likes }}</li>
+	      </ul>
+	    </div>
+	    <a href="{{ post_url }}">
+	      {{{ body }}}
+	    </a>
+	    {{{ comments }}}
+	  </div>
+	</script>
+	
+	<script id="linkTemplate" type="text/html">
+	  <dl class="article {{ type }}" timestamp="{{ timestamp }}">
+	    <dt class="title">
+	      <a href="{{ post_url }}">{{ title }}</a>
+	    </dt>
+	    <dd>
+	      {{{ body }}}    
+	    </dd>
+	    <div class="info">
+	      <ul class="shy extra cleanlist">
+	        <div class="triangle"></div>
+	        <li><a href="{{ post_url }}">{{ type }}</a></li>
+	        <li>Service: <img class="favicon" src="{{ icon }}" /> <a href="{{ user_url }}">{{ service }}</a></li>
+	        <li>Replies: {{ replies }}</li>
+	        <li>Likes: {{ likes }}</li>
+	        <li>{{{ comments }}}</li>
+	      </ul>
+	    </div>
+	  </dl>
+	</script>
+<!-- /TEMPLATES -->
