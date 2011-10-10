@@ -81,17 +81,89 @@ FlickrPhotos.params.comments = function(data){
   return input;
 }
 
+//https://github.com/cvn.json?token=453bc539e9c87f5f8cf1aed3894a8c56
+var GithubActivity = new Feed({
+  feed_url: 'https://github.com/cvn.json?callback=?',
+  date: 'created_at', //2011/09/06 18:37:17 -0700
+  service: 'Github',
+//likes: function(data){ if(data.repository) return data.repository.watchers },
+  icon: 'http://github.com/favicon.ico',
+  template: 'linkTemplate',
+  tester: function(data){ if(data.type=='CreateEvent' && !(data.repository)) return false },
+  type: function(data){ return (data.type=='WatchEvent') ? 'bookmark' : 'code' },
+  user_url: 'https://github.com/cvn'
+});
+GithubActivity.params.title = function(data){
+  var contents = '';
+  if (data.repository) {
+    contents = data.repository.name;
+  } else if (data.payload) {
+    contents = data.payload.desc;
+  }
+  return contents;
+}
+GithubActivity.params.body = function(data){
+  var contents = '';
+  if (data.type=='CreateEvent'){
+    contents = 'Created ' + (data.payload.ref || '') + ' ' + data.payload.ref_type;
+  } else if (data.type=='WatchEvent'){
+    contents = data.repository.description;
+  } else if (data.payload.action=='update'){
+    contents = 'Updated';
+  } else if (data.payload.action){
+    contents = data.payload.action;
+  } else {
+    contents = data.type;
+  }
+  return contents;
+}
+GithubActivity.params.post_url = function(data){
+  var contents = '';
+  if (data.repository){
+    contents = data.repository.url;
+  } else {
+    contents = data.url;
+  }
+  return contents;
+}
+GithubActivity.params.comments = function(data){
+  var contents = '';
+  if (data.repository){
+    contents = data.repository.description;
+  }
+  return contents;
+}
+
+var GithubCommits = new Feed({
+  feed_url: 'http://github.com/api/v2/json/commits/list/cvn/gusher/master?callback=?',
+  base: 'commits',
+  date: 'committed_date', //2011/09/06 18:37:17 -0700
+  service: 'Github Commits',
+  title: function(data){ return 'gusher' },
+  body: function(data){ return 'Commit: ' + data.message },
+//likes: function(data){ if(data.repository) return data.repository.watchers },
+  icon: 'http://github.com/favicon.ico',
+  post_url: function(data){ return 'https://github.com' + data.url },
+  template: 'linkTemplate',
+//tester: function(data){ if(!(data.committer.login=='cvn')) return false },
+  type: 'code',
+  user_url: 'https://github.com/cvn/gusher',
+  debug: 1
+});
+
+
 var GithubGists = new Feed({
   feed_url: 'http://gist.github.com/api/v1/json/gists/cvn?callback=?',
   base: 'gists',
   date: 'created_at', //2011/09/06 18:37:17 -0700
-  service: 'Github',
+  service: 'Github Gists',
   title: 'files',
   body: 'description',
-  replies: function(data){ return getProps('comments', data).length },
+  replies: function(data){ return data.comments.length },
   icon: 'http://github.com/favicon.ico',
+  template: 'linkTemplate',
   type: 'code',
-  post_url: function(data){ return 'http://gist.github.com/' + data.repo },
+  post_url: function(data){ return 'https://gist.github.com/' + data.repo },
   user_url: 'https://github.com/cvn'
 });
 GithubGists.params.comments = function(data) {
@@ -298,7 +370,7 @@ GoogleReaderStarred.params.comments = function(data) {
 
 // Instapaper RSS running through the Google Reader API
 var InstapaperStarred = new Feed({
-  feed_url: 'http://ajax.googleapis.com/ajax/services/feed/load?v=1.0&num=10&callback=?&q=' + encodeURIComponent('http://www.instapaper.com/starred/rss/35521/Gm8tmRhf7rsCL1H4XGrG3L6vUQ'),
+  feed_url: 'http://ajax.googleapis.com/ajax/services/feed/load?v=1.0&num=LIMIT&callback=?&q=' + encodeURIComponent('http://www.instapaper.com/starred/rss/35521/Gm8tmRhf7rsCL1H4XGrG3L6vUQ'),
   base: 'responseData.feed.entries',
   date: 'publishedDate',
   service: 'Instapaper',
@@ -554,7 +626,7 @@ var VimeoActivity = new Feed({
 //title: 'video_title',
   body: function(data){ return '<iframe src="http://player.vimeo.com/video/'+data.video_id+'?portrait=0" width="400" height="225" frameborder="0" webkitAllowFullScreen allowFullScreen></iframe>' }, //alts: 600 x 365
   icon: 'http://vimeo.com/favicon.ico',
-  type: function(data){ return getProps('type', data) },
+  type: function(data){ return data.type },
   post_url: 'video_url',
   user_url: 'http://vimeo.com/chadvonnau'
 });
@@ -603,6 +675,8 @@ $(document).ready(function(){
     DeliciousBookmarks.render();
     DisqusComments.render();
     FlickrPhotos.render();
+    GithubActivity.render();
+    GithubCommits.render();
     GithubGists.render();
     GoogleCalendarUpcoming.render();
     GooglePlusActivity.render();
