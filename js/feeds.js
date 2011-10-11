@@ -86,7 +86,7 @@ var GithubActivity = new Feed({
   feed_url: 'https://github.com/cvn.json?callback=?',
   date: 'created_at', //2011/09/06 18:37:17 -0700
   service: 'Github',
-//likes: function(data){ if(data.repository) return data.repository.watchers },
+  //likes: function(data){ if(data.repository) return data.repository.watchers },
   icon: 'http://github.com/favicon.ico',
   template: 'linkTemplate',
   tester: function(data){ if(data.type=='CreateEvent' && !(data.repository)) return false },
@@ -105,11 +105,13 @@ GithubActivity.params.title = function(data){
 GithubActivity.params.body = function(data){
   var contents = '';
   if (data.type=='CreateEvent'){
-    contents = 'Created ' + (data.payload.ref || '') + ' ' + data.payload.ref_type;
+    contents = 'created ' + (data.payload.ref || '') + ' ' + data.payload.ref_type;
+  } else if (data.type=='PushEvent'){
+    contents = data.payload.shas[0][2];
   } else if (data.type=='WatchEvent'){
     contents = data.repository.description;
   } else if (data.payload.action=='update'){
-    contents = 'Updated';
+    contents = 'updated';
   } else if (data.payload.action){
     contents = data.payload.action;
   } else {
@@ -119,7 +121,7 @@ GithubActivity.params.body = function(data){
 }
 GithubActivity.params.post_url = function(data){
   var contents = '';
-  if (data.repository){
+  if (data.repository && !(data.payload.shas)){
     contents = data.repository.url;
   } else {
     contents = data.url;
@@ -141,14 +143,12 @@ var GithubCommits = new Feed({
   service: 'Github Commits',
   title: function(data){ return 'gusher' },
   body: function(data){ return 'Commit: ' + data.message },
-//likes: function(data){ if(data.repository) return data.repository.watchers },
   icon: 'http://github.com/favicon.ico',
   post_url: function(data){ return 'https://github.com' + data.url },
   template: 'linkTemplate',
-//tester: function(data){ if(!(data.committer.login=='cvn')) return false },
+  tester: function(data){ if(!(data.committer.login=='cvn')) return false },
   type: 'code',
-  user_url: 'https://github.com/cvn/gusher',
-  debug: 1
+  user_url: 'https://github.com/cvn/gusher'
 });
 
 
@@ -659,37 +659,4 @@ var YouTubeFavorites = new Feed({
   type: 'like',
   post_url: 'video.player.default',
   user_url: 'http://www.youtube.com/chadvonnau'
-});
-
-$(document).ready(function(){ 
-  
-  // Asynchronously load the template definition file.
-  $.get('templates/standard.html', function(templates) {
-    // Inject all those templates at the end of the document.
-    $('body').append(templates);
-   
-    // Trigger templating system to read templates
-    ich.refresh();
-    
-    // Render templates
-    DeliciousBookmarks.render();
-    DisqusComments.render();
-    FlickrPhotos.render();
-    GithubActivity.render();
-    GithubCommits.render();
-    GithubGists.render();
-    GoogleCalendarUpcoming.render();
-    GooglePlusActivity.render();
-    GoogleReaderStarred.render();
-    InstapaperStarred.render();
-    LastfmFavs.render();
-    StackOverflowAnswers.render();
-    TumblrPosts.render();
-    TwitterPosts.render(20);
-    VimeoActivity.render();
-    YouTubeFavorites.render();
-    
-    //setTimeout('$("#content").children().tsort({attr:"timestamp",order:"desc"})',2000);
-  });
-  
 });

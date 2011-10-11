@@ -9,7 +9,7 @@
 	position: relative;
 }
 .cleanlist.horizontal li {
-	display: inline;
+	display: inline-block;
 }
 .headlinec {
 	margin: 2em 0 1em;
@@ -23,6 +23,9 @@
 
 .article {
 	position:relative;
+	margin:0;
+}
+.article:not(:first-child) {
 	margin-top: 2em;
 }
 .article img {
@@ -43,30 +46,31 @@
 .article .info {
 	position: absolute;
 	top: 0;
-	left:-24px;
+	left: -24px;
 	width: 16px;
 	height: 16px;
-	background-image: url('../images/standard/arrow-right-grey.png');
+	background-image: url('../images/standard/arrow-right-black.png');
 	background-position: center center;
 	background-repeat: no-repeat;
 }
 .article .info:hover {
-	background-image: url('../images/standard/arrow-down-grey.png');
+	background-image: url('../images/standard/arrow-down-black.png');
 }
-.article.tweet .info { background-image: url('http://twitter.com/favicon.ico'); }
+.article.tweet .info { background-image: url('../images/standard/tweet-16.png'); }
 .article.bookmark .info { background-image: url('../images/standard/bookmark-16.png'); }
 .article.code .info { background-image: url('../images/standard/code-16.png'); }
 .article.music .info { background-image: url('../images/standard/music-16.png'); }
 .article.add_comment .info { background-image: url('../images/standard/response-16.png'); }
 .article.like .info { background-image: url('../images/standard/like-16.png'); }
+.article.photo .info,
+.article.video .info { background-image: url('../images/standard/media-16.png'); }
 
 .article .extra {
 	position: absolute;
 	z-index: 100;
 	top: 13px;
 	left: -28px;
-	min-width: 100px;
-	white-space: nowrap;
+	width: 200px;
 	background-color: rgba(0,0,0,.9);
 	color: white;
 	padding: 1em;
@@ -74,7 +78,6 @@
 	border-top:solid 10px transparent;
 	background-clip: padding-box;
 	text-align: left;
-	text-transform: capitalize;
 	-webkit-box-shadow: 0 10px 10px rgba(0,0,0,.3);
 	-moz-box-shadow: 0 10px 10px rgba(0,0,0,.3);
 	box-shadow: 0 10px 10px rgba(0,0,0,.3);
@@ -89,6 +92,10 @@
 	top:-11px;
 	opacity:.9;
 	filter:alpha(opacity=90);
+}
+
+.article .extra li:first-of-type {
+	text-transform: capitalize;
 }
 
 .article .extra a {

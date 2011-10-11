@@ -19,7 +19,7 @@ function Feed(params){
     tester: params.tester || function(){},
     date: params.date || '',
     date_display: (typeof(params.date_display)!='undefined') ? params.date_display : 2,
-    daysago: (typeof(params.daysago)!='undefined') ? params.daysago : 60,
+    daysago: (typeof(params.daysago)!='undefined') ? params.daysago : 7,
     normalizer: params.normalizer || function(str){return str},
     order: params.order || 'descend',
     service: params.service || '',
