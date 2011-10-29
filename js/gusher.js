@@ -13,6 +13,9 @@
 
 function Feed(params){
   this.params = {
+    feed_apikey: params.feed_apikey || '',
+    feed_limit: params.feed_limit || 10,
+    feed_type: params.feed_type || 'JSON',
     feed_url: params.feed_url || '',
     base: params.base || '.',
     debug: params.debug || 0,
@@ -36,6 +39,8 @@ function Feed(params){
     post_url: params.post_url || '',
     target: params.target || '#content',
     template: params.template || 'blogTemplate',
+    user_id: params.user_id || '',
+    user_name: params.user_name || '',
     user_url: params.user_url || ''
   }
 }
@@ -71,66 +76,76 @@ Feed.prototype = {
       }
     }
   },
-  render: function(limit){
-    limit = limit || 10;
+  render: function(){
     // make object accessible in this scope
     var self = this;
+    var params = self.params;
+    // set max number of results to process
+    var limit = params.feed_limit;
+    // if RSS feed, get URL for JSONP version
+    if (params.feed_type.toLowerCase()=='rss') {
+      params.feed_url = 'http://ajax.googleapis.com/ajax/services/feed/load?v=1.0&num=LIMIT&callback=?&q=' + encodeURIComponent(params.feed_url);
+    }
+    // replace placeholder values in feed url
+    params.feed_url = params.feed_url.replace('LIMIT', limit).replace('USERNAME', params.user_name).replace('USERID', params.user_id).replace('APIKEY', params.feed_apikey);
     // get the feed
-    $.getJSON(self.params.feed_url.replace('LIMIT', limit),
+    $.getJSON(params.feed_url,
       function(data){
-        if (self.params.debug){ console.log(['DATA',data]); }
+        logger(['FEED '+params.service,data,'params',params], params.debug);
+        // replace placeholder values in user url
+        params.user_url = getString(params.user_url, data).replace('USERNAME', params.user_name).replace('USERID', params.user_id);
         // normalize the feed attach point
-        baseArray = getProps(self.params.base, data);
+        baseArray = getProps(params.base, data);
+        if (baseArray==false){
+          return( logger(params.service + ' feed has no array of items (base = ' + params.base + '). Feed ignored.', params.debug) );
+        }
         // iterate over feed items
         $.each(baseArray, function(i,item){
-            if (self.params.debug){ console.log(['ITEM',this]); }
+            var itemIn = $.extend({}, this);
             // test if limit reached
             if(i >= limit) return false;
             // module specific code
-            if (self.params.tester(this)==false){
-              if(self.params.debug){
-                return(console.log(self.params.service+' item malformed. Not processed.'));
-              } else {
-                return;
-              }
+            if (params.tester(this)==false){
+              return( logger(params.service+' item malformed. Not processed.', params.debug) );
             }
             // test if time limit reached
-            var dateObj = new Date(self.params.normalizer(getProps(self.params.date, this)));
-            this.date_obj = dateObj; // make it available to view constructor functions
+            var dateObj = new Date(params.normalizer(getProps(params.date, this)));
             datestring = formatDate(dateObj);
             timestamp = dateObj.getTime();
-            timelimit = (self.params.daysago == 0) ? 0 : new Date().getTime() - (self.params.daysago * 24 * 60 * 60 * 1000);
+            timelimit = (params.daysago == 0) ? 0 : new Date().getTime() - (params.daysago * 24 * 60 * 60 * 1000);
             if(timestamp < timelimit) {
-              if(self.params.debug){
-                return(console.log(self.params.service+' item too old (' + datestring + ') Not processed.'));
-              } else {
-                return;
-              }
+              return( logger(params.service+' item too old (' + datestring + '). Not processed.', params.debug) );
             }
+            // make parameters available to view constructor functions
+            this.date_obj = dateObj;
+            if(params.user_id){ this.user_id = params.user_id; }
+            if(params.user_name){ this.user_name = params.user_name; }
+            if(params.feed_apikey){ this.feed_apikey = params.feed_apikey; }
             // construct view
             var view = {
-              order : self.params.order,
-              service : self.params.service,
-              site : getProps(self.params.site, this),
-              site_url : getProps(self.params.site_url, this),
-              title : getProps(self.params.title, this),
-              body : getProps(self.params.body, this),
-              comments : getProps(self.params.comments, this),
+              order : params.order,
+              service : params.service,
+              site : getProps(params.site, this),
+              site_url : getProps(params.site_url, this),
+              title : getProps(params.title, this),
+              body : getProps(params.body, this),
+              comments : getProps(params.comments, this),
               date : datestring,
               timestamp : timestamp,
-              replies: getProps(self.params.replies, this),
-              likes: getProps(self.params.likes, this),
-              icon : self.params.icon,
-              post_icon : getString(self.params.post_icon, this),
-              post_url : getProps(self.params.post_url, this),
-              type: getString(self.params.type, this),
-              user_url : self.params.user_url
+              replies: getProps(params.replies, this),
+              likes: getProps(params.likes, this),
+              icon : params.icon,
+              post_icon : getString(params.post_icon, this),
+              post_url : getProps(params.post_url, this),
+              type: getString(params.type, this),
+              user_url : getString(params.user_url, this)
             }
-            var template = getString(self.params.template, this);
+            var template = getString(params.template, this);
             var item = ich[template](view);
             self.insert(item, timestamp, datestring);
+            logger(['ITEM '+i,itemIn,'enriched',this,'view',view], params.debug);
         });
-        $('#services').append('<li><img class="favicon" src="'+self.params.icon+'"> <a href="'+self.params.user_url+'">' + self.params.service + '</a></li>')
+        $('#services').append('<li><img class="favicon" src="'+params.icon+'"> <a href="'+params.user_url+'">' + params.service + '</a></li>')
       });
   },
   insert: function(item, timestamp, dateStr){
@@ -167,6 +182,13 @@ Feed.prototype = {
 
 // Utility Functions
 
+var logger = function(str, enabled){
+  enabled = enabled || 0;
+  if (enabled) {
+    console.log(str);
+  }
+}
+
 var formatDate = function(dateObj){
   dateObj = dateObj || new Date();
   var dayname = new Array('Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'),
@@ -182,7 +204,7 @@ var formatDate = function(dateObj){
 var getProps = function(path, context){
   // Get properties of an object
   // ex: getProps('response.posts', this) // Returns the subobject at this.response.posts
-  // Path function, object as argument
+  // Specify path to be an empty string or function to override
   
   // emtpy string in returns empty string
   if (path==''){
@@ -194,7 +216,12 @@ var getProps = function(path, context){
   } else if (path!='.'){
     var path = path.split('.');	
     for ( var i = 0; i < path.length; i++ ){
-      context = context[path[i]];
+      if(path[i] in context) {
+        context = context[path[i]];
+      } else {
+        context = false;
+        break;
+      }
     };
   }
   return context;

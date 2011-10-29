@@ -1,7 +1,7 @@
-// Define Feeds
+// Define Feed Parameters
 
 /*
-var TemplateFeed = new Feed({
+var TemplateParams = {
   feed_url: '',
   base: '',
   tester: function(){},
@@ -16,14 +16,35 @@ var TemplateFeed = new Feed({
   post_icon: '',
   post_url: '',
   comments: '',
+  replies: '',
+  likes: '',
   template: '',
+  user_id: '',
+  user_name: '',
   user_url: 'http://',
   debug: 0
-});
+}
 */
 
-var DeliciousBookmarks = new Feed({
-  feed_url: 'http://feeds.delicious.com/v2/json/chadvonnau?count=LIMIT&callback=?',
+var DailyBoothPhotosParams = {
+  feed_url: 'https://api.dailybooth.com/v1/pictures.json?id=USERID&callback=?',
+  date: 'created_at', //2011-10-27T10:42:34+0000
+  normalizer: function(str){return str.replace('+0000','Z')},
+  service: 'DailyBooth',
+  comments: 'blurb',
+  body: function(data){ return '<p><img src="' + data.urls.large.replace(/cdn\d/,'cloudfront') + '"></p>' },  //remove the replace hack once dailybooth fixes API
+  icon: 'http://dailybooth.com/favicon.ico',
+  type: 'photo',
+  post_url: function(data){ return 'http://dailybooth.com/USERNAME/'.replace('USERNAME', data.user_name) + data.picture_id },
+  replies: 'comment_count',
+  template: 'photoTemplate',
+  user_name: 'asakawano',
+  user_id: '798589',
+  user_url: 'http://dailybooth.com/USERNAME'
+}
+
+var DeliciousBookmarksParams = {
+  feed_url: 'http://feeds.delicious.com/v2/json/USERNAME?count=LIMIT&callback=?',
   date: 'dt', //2011-10-02T00:28:21Z
 //normalizer: function(str){return str.replace(/-/g,'/').replace(/[TZ]/g,' ')},
   service: 'Delicious',
@@ -36,11 +57,13 @@ var DeliciousBookmarks = new Feed({
   post_url: 'u',
 //comments: function(data){ return 'tags: ' + data.t.join(', ') }
   template: 'linkTemplate',
-  user_url: 'http://delicious.com/chadvonnau'
-});
+  user_name: 'chadvonnau',
+  user_url: 'http://delicious.com/USERNAME'
+}
 
-var DisqusComments = new Feed({
-  feed_url: 'http://disqus.com/api/3.0/users/listPosts.jsonp?user:username=eyeburn&limit=LIMIT&related=thread&related=forum&api_key=1bkW3wy8wM24welSl5cjLD1ID2g2YylT0DeDMYbs4oXM8gzCdW2YbZP68MidUMdx&callback=?',
+var DisqusCommentsParams = {
+  feed_apikey: '1bkW3wy8wM24welSl5cjLD1ID2g2YylT0DeDMYbs4oXM8gzCdW2YbZP68MidUMdx',
+  feed_url: 'http://disqus.com/api/3.0/users/listPosts.jsonp?user:username=USERNAME&limit=LIMIT&related=thread&related=forum&api_key=APIKEY&callback=?',
   base: 'response',
   date: 'createdAt', //2011-10-02T19:33:55
   normalizer: function(str){ return str+'Z' },
@@ -54,11 +77,12 @@ var DisqusComments = new Feed({
   post_url: 'url',
   comments: function(data){ return (data.likes) ? 'Likes: '+data.likes : '' },
   template: 'linkTemplate',
-  user_url: 'http://disqus.com/eyeburn'
-});
+  user_name: 'eyeburn',
+  user_url: 'http://disqus.com/USERNAME'
+}
 
-var FlickrPhotos = new Feed({
-  feed_url: 'http://api.flickr.com/services/feeds/photos_public.gne?lang=en-us&format=json&id=24661669@N03&jsoncallback=?',
+var FlickrPhotosParams = {
+  feed_url: 'http://api.flickr.com/services/feeds/photos_public.gne?lang=en-us&format=json&id=USERID&jsoncallback=?',
   base: 'items',
   date: 'published', //2011-05-29T14:58:21Z
   service: 'Flickr',
@@ -68,9 +92,11 @@ var FlickrPhotos = new Feed({
   type: 'photo',
   post_url: 'link',
   template: 'photoTemplate',
-  user_url: 'http://www.flickr.com/photos/chadvonnau'
-});
-FlickrPhotos.params.comments = function(data){
+  user_id: '24661669@N03',
+  user_name: 'chadvonnau',
+  user_url: 'http://www.flickr.com/photos/USERNAME'
+}
+FlickrPhotosParams.comments = function(data){
   var input = data.description;
   var regex = /<p>(.*?)<\/p>/g;
   if(regex.test(data.description)) {
@@ -81,9 +107,8 @@ FlickrPhotos.params.comments = function(data){
   return input;
 }
 
-//https://github.com/cvn.json?token=453bc539e9c87f5f8cf1aed3894a8c56
-var GithubActivity = new Feed({
-  feed_url: 'https://github.com/cvn.json?callback=?',
+var GithubActivityParams = {
+  feed_url: 'https://github.com/USERNAME.json?callback=?',
   date: 'created_at', //2011/09/06 18:37:17 -0700
   service: 'Github',
   //likes: function(data){ if(data.repository) return data.repository.watchers },
@@ -91,9 +116,10 @@ var GithubActivity = new Feed({
   template: 'linkTemplate',
   tester: function(data){ if(data.type=='CreateEvent' && !(data.repository)) return false },
   type: function(data){ return (data.type=='WatchEvent') ? 'bookmark' : 'code' },
-  user_url: 'https://github.com/cvn'
-});
-GithubActivity.params.title = function(data){
+  user_name: 'cvn',
+  user_url: 'https://github.com/USERNAME'
+}
+GithubActivityParams.title = function(data){
   var contents = '';
   if (data.repository) {
     contents = data.repository.name;
@@ -102,7 +128,7 @@ GithubActivity.params.title = function(data){
   }
   return contents;
 }
-GithubActivity.params.body = function(data){
+GithubActivityParams.body = function(data){
   var contents = '';
   if (data.type=='CreateEvent'){
     contents = 'created ' + (data.payload.ref || '') + ' ' + data.payload.ref_type;
@@ -119,7 +145,7 @@ GithubActivity.params.body = function(data){
   }
   return contents;
 }
-GithubActivity.params.post_url = function(data){
+GithubActivityParams.post_url = function(data){
   var contents = '';
   if (data.repository && !(data.payload.shas)){
     contents = data.repository.url;
@@ -128,7 +154,7 @@ GithubActivity.params.post_url = function(data){
   }
   return contents;
 }
-GithubActivity.params.comments = function(data){
+GithubActivityParams.comments = function(data){
   var contents = '';
   if (data.repository){
     contents = data.repository.description;
@@ -136,24 +162,26 @@ GithubActivity.params.comments = function(data){
   return contents;
 }
 
-var GithubCommits = new Feed({
-  feed_url: 'http://github.com/api/v2/json/commits/list/cvn/gusher/master?callback=?',
+var GithubCommitsParams = {
+  feed_url: 'http://github.com/api/v2/json/commits/list/USERNAME/USERID/master?callback=?',
   base: 'commits',
   date: 'committed_date', //2011/09/06 18:37:17 -0700
   service: 'Github Commits',
-  title: function(data){ return 'gusher' },
+  title: 'user_id',
   body: function(data){ return 'Commit: ' + data.message },
   icon: 'http://github.com/favicon.ico',
   post_url: function(data){ return 'https://github.com' + data.url },
   template: 'linkTemplate',
-  tester: function(data){ if(!(data.committer.login=='cvn')) return false },
+  tester: function(data){ if(!(data.committer.login==data.user_name)) return false },
   type: 'code',
-  user_url: 'https://github.com/cvn/gusher'
-});
+  user_id : 'gusher',
+  user_name: 'cvn',
+  user_url: 'https://github.com/USERNAME/USERID'
+}
 
 
-var GithubGists = new Feed({
-  feed_url: 'http://gist.github.com/api/v1/json/gists/cvn?callback=?',
+var GithubGistsParams = {
+  feed_url: 'http://gist.github.com/api/v1/json/gists/USERNAME?callback=?',
   base: 'gists',
   date: 'created_at', //2011/09/06 18:37:17 -0700
   service: 'Github Gists',
@@ -164,9 +192,10 @@ var GithubGists = new Feed({
   template: 'linkTemplate',
   type: 'code',
   post_url: function(data){ return 'https://gist.github.com/' + data.repo },
-  user_url: 'https://github.com/cvn'
-});
-GithubGists.params.comments = function(data) {
+  user_name: 'cvn',
+  user_url: 'https://github.com/USERNAME'
+}
+GithubGistsParams.comments = function(data) {
   var comments = data.comments,
       view = '';
   $.each(comments, function(i,item){
@@ -175,8 +204,8 @@ GithubGists.params.comments = function(data) {
   return view;
 }
 
-var GoogleCalendarUpcoming = new Feed({
-  feed_url: 'http://www.google.com/calendar/feeds/n009cm93n1nvn4heto23h8h9oc@group.calendar.google.com/public/full?alt=json-in-script&max-results=LIMIT&orderby=starttime&singleevents=true&sortorder=ascending&futureevents=true&callback=?',
+var GoogleCalendarUpcomingParams = {
+  feed_url: 'http://www.google.com/calendar/feeds/USERID/public/full?alt=json-in-script&max-results=LIMIT&orderby=starttime&singleevents=true&sortorder=ascending&futureevents=true&callback=?',
   base: 'feed.entry',
   tester: function(data){ if (!('gd$when' in data)) return false; },
   date: 'gd$when.0.startTime', // 2011-07-01 or 2011-07-01T12:00:00.000-07:00
@@ -191,9 +220,10 @@ var GoogleCalendarUpcoming = new Feed({
   comments: function(data){return 'Location: ' + getProps('gd$where.0.valueString', data) },
   target: '#events',
   template: 'eventTemplate',
-  user_url: 'https://www.google.com/calendar/embed?src=n009cm93n1nvn4heto23h8h9oc%40group.calendar.google.com&ctz=America/Los_Angeles'
-});
-GoogleCalendarUpcoming.params.normalizer = function(str){
+  user_id: 'n009cm93n1nvn4heto23h8h9oc@group.calendar.google.com',
+  user_url: 'https://www.google.com/calendar/embed?src=USERID&ctz=America/Los_Angeles'
+}
+GoogleCalendarUpcomingParams.normalizer = function(str){
   if(/:/.test(str)){
     str = Date.parse(str);
   } else {
@@ -202,8 +232,9 @@ GoogleCalendarUpcoming.params.normalizer = function(str){
   return str;
 }
 
-var GooglePlusActivity = new Feed({
-  feed_url: 'https://www.googleapis.com/plus/v1/people/117597577088490503351/activities/public?key=AIzaSyBwiHaQMmsTQ74bpoJcaQjtZ2GUAz4nWtk&prettyPrint=false&maxResults=LIMIT&callback=?',
+var GooglePlusActivityParams = {
+  feed_apikey: 'AIzaSyBwiHaQMmsTQ74bpoJcaQjtZ2GUAz4nWtk',
+  feed_url: 'https://www.googleapis.com/plus/v1/people/USERID/activities/public?key=APIKEY&prettyPrint=false&maxResults=LIMIT&callback=?',
   base: 'items',
   date: 'published', //2011-09-27T17:23:30.000Z
   service: 'Google+',
@@ -212,9 +243,10 @@ var GooglePlusActivity = new Feed({
   likes: 'object.plusoners.totalItems',
   replies: 'object.replies.totalItems',
   icon: 'https://plus.google.com/favicon.ico',
-  user_url: 'https://plus.google.com/117597577088490503351'
-});
-GooglePlusActivity.params.post_url = function(data){
+  user_id: '117597577088490503351',
+  user_url: 'https://plus.google.com/USERID'
+}
+GooglePlusActivityParams.post_url = function(data){
   var property = getProps('url',data);
   if (typeof(data.object.attachments)!='undefined'){
     var items = data.object.attachments,
@@ -234,7 +266,7 @@ GooglePlusActivity.params.post_url = function(data){
   }
   return property;
 }
-GooglePlusActivity.params.title = function(data){
+GooglePlusActivityParams.title = function(data){
   var property = '';
   if (typeof(data.object.attachments)!='undefined'){
     var items = data.object.attachments,
@@ -254,7 +286,7 @@ GooglePlusActivity.params.title = function(data){
   }
   return property;
 }
-GooglePlusActivity.params.type = function(data){
+GooglePlusActivityParams.type = function(data){
   var property = 'thought';
   if (typeof(data.object.attachments)!='undefined'){
     var items = data.object.attachments,
@@ -288,7 +320,7 @@ GooglePlusActivity.params.type = function(data){
   }
   return property;
 }
-GooglePlusActivity.params.template = function(data){
+GooglePlusActivityParams.template = function(data){
   var property = 'blogTemplate';
   if (typeof(data.object.attachments)!='undefined'){
     var items = data.object.attachments,
@@ -308,7 +340,7 @@ GooglePlusActivity.params.template = function(data){
   }
   return property;
 }
-GooglePlusActivity.params.comments = function(data){
+GooglePlusActivityParams.comments = function(data){
   var view = '',
       replies = data.object.replies.totalItems,
       plusones = data.object.plusoners.totalItems;
@@ -344,9 +376,9 @@ GooglePlusActivity.params.comments = function(data){
   return view;
 }
 
-var GoogleReaderStarred = new Feed({
-  // Non-JSONP, but full text feed: http://www.google.com/reader/api/0/stream/contents/user/18350608172246430560/state/com.google/starred	
-  feed_url: 'http://www.google.com/reader/public/javascript/user/18350608172246430560/state/com.google/starred?n=LIMIT&callback=?',
+var GoogleReaderStarredParams = {
+  // Non-JSONP, but full text feed: http://www.google.com/reader/api/0/stream/contents/user/USERID/state/com.google/starred	
+  feed_url: 'http://www.google.com/reader/public/javascript/user/USERID/state/com.google/starred?n=LIMIT&callback=?',
   base: 'items',
   date: 'published', //1317767141
   normalizer: function(str){return str*1000},
@@ -357,9 +389,11 @@ var GoogleReaderStarred = new Feed({
   type: 'like',
   post_url: 'alternate.href',
   template: 'quoteTemplate',
-  user_url: 'http://www.google.com/reader/shared/chadvonnau'
-});
-GoogleReaderStarred.params.comments = function(data) {
+  user_name: 'chadvonnau',
+  user_id: '18350608172246430560',
+  user_url: 'http://www.google.com/reader/shared/USERNAME'
+}
+GoogleReaderStarredParams.comments = function(data) {
   var comments = data.comments,
       view = '';
   $.each(comments, function(i,item){
@@ -368,9 +402,10 @@ GoogleReaderStarred.params.comments = function(data) {
   return view;
 }
 
-// Instapaper RSS running through the Google Reader API
-var InstapaperStarred = new Feed({
-  feed_url: 'http://ajax.googleapis.com/ajax/services/feed/load?v=1.0&num=LIMIT&callback=?&q=' + encodeURIComponent('http://www.instapaper.com/starred/rss/35521/Gm8tmRhf7rsCL1H4XGrG3L6vUQ'),
+// Instapaper (RSS)
+var InstapaperStarredParams = {
+  feed_type: 'RSS',
+  feed_url: 'http://www.instapaper.com/starred/rss/USERID',
   base: 'responseData.feed.entries',
   date: 'publishedDate',
   service: 'Instapaper',
@@ -380,11 +415,13 @@ var InstapaperStarred = new Feed({
   post_url: 'link',
   template: 'linkTemplate',
   type: 'like',
-  user_url: 'http://www.instapaper.com/starred/rss/35521/Gm8tmRhf7rsCL1H4XGrG3L6vUQ'
-})
+  user_id: '35521/Gm8tmRhf7rsCL1H4XGrG3L6vUQ',
+  user_url: 'http://www.instapaper.com/starred/rss/USERID'
+}
 
-var LastfmFavs = new Feed({
-  feed_url: 'http://ws.audioscrobbler.com/2.0/?method=user.getlovedtracks&format=json&api_key=71350c6ce93a1e0c92749f023be926d7&user=chadnau&limit=LIMIT&callback=?',
+var LastfmFavsParams = {
+  feed_apikey: '71350c6ce93a1e0c92749f023be926d7',
+  feed_url: 'http://ws.audioscrobbler.com/2.0/?method=user.getlovedtracks&format=json&api_key=APIKEY&user=USERNAME&limit=LIMIT&callback=?',
   base: 'lovedtracks.track',
   date: 'date.uts',
   normalizer: function(str){return str*1000},
@@ -395,11 +432,13 @@ var LastfmFavs = new Feed({
   type: 'music',
   post_url: 'url',
   template: 'linkTemplate',
-  user_url: 'http://www.last.fm/user/chadnau'
-});
-/*
-var LastfmActivity = new Feed({
-  feed_url: 'http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&format=json&user=chadnau&limit=LIMIT&nowplaying=false&api_key=71350c6ce93a1e0c92749f023be926d7&callback=?',
+  user_name: 'chadnau',
+  user_url: 'http://www.last.fm/user/USERNAME'
+}
+
+var LastfmActivityParams = {
+  feed_apikey: '71350c6ce93a1e0c92749f023be926d7',
+  feed_url: 'http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&format=json&api_key=APIKEY&user=USERNAME&limit=LIMIT&nowplaying=false&callback=?',
   base: 'recenttracks.track',
   date: 'date.uts',
   normalizer: function(str){return str*1000},
@@ -408,12 +447,14 @@ var LastfmActivity = new Feed({
   body: 'artist.#text',
   icon: 'http://last.fm/favicon.ico',
   post_url: 'url',
-  comments: ''
-});
-*/
+  template: 'linkTemplate',
+  type: 'music',
+  user_name: 'chadnau',
+  user_url: 'http://www.last.fm/user/USERNAME'
+}
 
-var StackOverflowAnswers = new Feed({
-  feed_url: 'http://api.stackoverflow.com/1.0/users/490592/answers?body=true&comments=true&pagesize=LIMIT&jsonp=?',
+var StackOverflowAnswersParams = {
+  feed_url: 'http://api.stackoverflow.com/1.0/users/USERID/answers?body=true&comments=true&pagesize=LIMIT&jsonp=?',
   base: 'answers',
   date: 'creation_date',
   normalizer: function(str){return str*1000},
@@ -423,9 +464,10 @@ var StackOverflowAnswers = new Feed({
   icon: 'http://sstatic.net/stackoverflow/img/favicon.ico',
   type: 'response',
   post_url: function(data){ return 'http://stackoverflow.com' + data.answer_comments_url.replace('answers','questions') },
-  user_url: 'http://stackoverflow.com/users/490592'
-});
-StackOverflowAnswers.params.comments = function(data) {
+  user_id: '490592',
+  user_url: 'http://stackoverflow.com/users/USERID'
+}
+StackOverflowAnswersParams.comments = function(data) {
   var comments = data.comments,
       view = '';
   $.each(comments, function(i,item){
@@ -434,8 +476,9 @@ StackOverflowAnswers.params.comments = function(data) {
   return view;
 }
 
-var TumblrPosts = new Feed({
-  feed_url: 'http://api.tumblr.com/v2/blog/eyeburn.info/posts?api_key=0XBDS5MbfogrLBwoQKnkGjZ4Kw3ili2j3tv2goWTYj2WEZVCJZ&limit=LIMIT&jsonp=?',
+var TumblrPostsParams = {
+  feed_apikey: '0XBDS5MbfogrLBwoQKnkGjZ4Kw3ili2j3tv2goWTYj2WEZVCJZ',
+  feed_url: 'http://api.tumblr.com/v2/blog/USERNAME/posts?api_key=APIKEY&limit=LIMIT&jsonp=?',
   base: 'response.posts',
   date: 'timestamp',
   normalizer: function(str){return str*1000},
@@ -444,9 +487,10 @@ var TumblrPosts = new Feed({
   icon: 'http://assets.tumblr.com/images/favicon.gif',
   type: function(data){ return getProps('type', data) },
   post_url: 'post_url',
-  user_url: 'http://eyeburn.info'
-});
-TumblrPosts.params.body = function(data){
+  user_name: 'eyeburn.info',
+  user_url: function(data){ return getProps('response.blog.url', data) }
+}
+TumblrPostsParams.body = function(data){
   var media = '',
       content = '';
   switch(data.type) {
@@ -479,7 +523,7 @@ TumblrPosts.params.body = function(data){
   }
   return content;
 }
-TumblrPosts.params.comments = function(data){
+TumblrPostsParams.comments = function(data){
   var content = '';
   if (data.note_count){
   	content += 'Likes: ' + data.note_count;
@@ -487,17 +531,18 @@ TumblrPosts.params.comments = function(data){
   return content;
 }
 
-var TwitterPosts = new Feed({
-  feed_url: 'http://api.twitter.com/1/statuses/user_timeline/chadvonnau.json?include_entities=true&count=LIMIT&callback=?',
+var TwitterPostsParams = {
+  feed_url: 'http://api.twitter.com/1/statuses/user_timeline/USERNAME.json?include_entities=true&count=LIMIT&callback=?',
   date: 'created_at', //Mon Oct 03 20:26:38 +0000 2011
   service: 'Twitter',
 //likes: 'favorited',
   icon: 'http://twitter.com/favicon.ico',
   type: 'tweet',
   post_url: function(data){ return 'http://twitter.com/' + data.user.screen_name + '/statuses/' + data.id_str },
-  user_url: 'http://twitter.com/chadvonnau'
-});
-TwitterPosts.params.body = function(data){
+  user_name: 'chadvonnau',
+  user_url: 'http://twitter.com/USERNAME'
+}
+TwitterPostsParams.body = function(data){
   // function borrowed from http://140dev.com/free-twitter-api-source-code-library/twitter-display/linkify-php/
   // entities is an object delivered by the Twitter API for each tweet with 
   // the user @mentions, hastags, and URLs broken out along with their positions
@@ -617,8 +662,8 @@ TwitterPosts.params.body = function(data){
   return '<p>' + new_text + '</p>';
 }
 
-var VimeoActivity = new Feed({
-  feed_url: 'http://vimeo.com/api/v2/activity/chadvonnau/user_did.json?callback=?',
+var VimeoActivityParams = {
+  feed_url: 'http://vimeo.com/api/v2/activity/USERNAME/user_did.json?callback=?',
   tester: function(data){ if (/^(?:group_clip|group_join)$/.test(data.type)) return false; },
   date: 'date',
   normalizer: function(str){return str.replace(/-/g,'/')},
@@ -628,9 +673,10 @@ var VimeoActivity = new Feed({
   icon: 'http://vimeo.com/favicon.ico',
   type: function(data){ return data.type },
   post_url: 'video_url',
-  user_url: 'http://vimeo.com/chadvonnau'
-});
-VimeoActivity.params.comments = function(data){
+  user_name: 'chadvonnau',
+  user_url: 'http://vimeo.com/USERNAME'
+}
+VimeoActivityParams.comments = function(data){
   var content = '';
   switch(data.type) {
     case 'add_tags':
@@ -647,8 +693,8 @@ VimeoActivity.params.comments = function(data){
   return '<p>' + content + '</p>';
 }
 
-var YouTubeFavorites = new Feed({
-  feed_url: 'https://gdata.youtube.com/feeds/api/users/chadvonnau/favorites?v=2&alt=jsonc&format=5&max-results=LIMIT&callback=?',
+var YouTubeFavoritesParams = {
+  feed_url: 'https://gdata.youtube.com/feeds/api/users/USERNAME/favorites?v=2&alt=jsonc&format=5&max-results=LIMIT&callback=?',
   base: 'data.items',
   date: 'created',
   normalizer: function(str){return str.replace(/-/g,'/').replace(/[TZ]/g,' ').replace(/\.000/g,'')},
@@ -658,5 +704,6 @@ var YouTubeFavorites = new Feed({
   icon: 'http://www.youtube.com/favicon.ico',
   type: 'like',
   post_url: 'video.player.default',
-  user_url: 'http://www.youtube.com/chadvonnau'
-});
+  user_name: 'chadvonnau',
+  user_url: 'http://www.youtube.com/USERNAME'
+}

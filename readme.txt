@@ -50,3 +50,26 @@ RELEASE NOTES
   .2  - Wrote a Feed class to standardize the way feeds are created
   .21 - Added support for Github activity and Commit feeds
   .22 - CSS cleanup. New icons. Moved feed rendering from feeds.js to go.js
+  .23 - Separated user name, id, and api key from feed_url, Daily Booth support added
+
+TO DO
+
+* Facebook support
+* Daily booth
+* Blogger
+* Reddit
+* Soundcloud
+* Instagram
+* Twitter favorites & filtering replies.
+* Amazon (wishlist)?
+* Pinboard?
+* Canv.as?
+* Netflix?
+* Amazon?
+* Newgrounds?
+* vBulletin?
+* Conditionally show "Likes:" & "Replies:"
+* Visual display of Likes & replies (color coded?)
+* Refactor property names so they are grouped
+
+
